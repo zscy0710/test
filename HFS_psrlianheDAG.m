@@ -43,10 +43,13 @@ for i = 1:maxIte
     for j = 1:length(noLeafNode)
         %% initialization
         D{noLeafNode(j)} = diag(0.5./max(sqrt(sum(W{noLeafNode(j)}.*W{noLeafNode(j)},2)),eps));%Here eps is the smallest positive number, and its setting avoids the appearance of infinite values
-        L1(j)=M1(j)- F1(j);
-        %XAX =X{noLeafNode(j)}'*(L1(j)+L1(j)')* X{noLeafNode(j)};
+
+        % Use the graph Laplacian weight for the current node (row-sum minus self-weight)
+        % to avoid inadvertently grabbing only the first-column value via linear indexing.
+        L1(j) = M1(j) - F1(j, j);
+
         XAX =X{noLeafNode(j)}'*(L1(j))* X{noLeafNode(j)};
-        %B=R{noLeafNode(j)}+R{noLeafNode(j)}';
+
         W{noLeafNode(j)}=inv(XX{noLeafNode(j)}+ lambda* D{noLeafNode(j)}+ alpha1*XAX + beta*R{noLeafNode(j)})*(XY{noLeafNode(j)});
     end
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -54,8 +57,8 @@ for i = 1:maxIte
     if (flag ==1)
        for j = 1:length(noLeafNode)
         M1=sum(F1,2);
-        L1(j)=M1(j)- F1(j);
-        obj(i)=(norm(X{noLeafNode(j)}*W{noLeafNode(j)}-Y{noLeafNode(j)}))^2+alpha1*trace(W{noLeafNode(j)}'*X{noLeafNode(j)}'*L1(j)* X{noLeafNode(j)}*W{noLeafNode(j)})+beta*trace(W{noLeafNode(j)}'*R{noLeafNode(j)}*W{noLeafNode(j)}) +lambda*L21(W{noLeafNode(j)}) ;  
+        L1(j)=M1(j)- F1(j, j);
+        obj(i)=(norm(X{noLeafNode(j)}*W{noLeafNode(j)}-Y{noLeafNode(j)}))^2+alpha1*trace(W{noLeafNode(j)}'*X{noLeafNode(j)}'*L1(j)* X{noLeafNode(j)}*W{noLeafNode(j)})+beta*trace(W{noLeafNode(j)}'*R{noLeafNode(j)}*W{noLeafNode(j)}) +lambda*L21(W{noLeafNode(j)}) ;
        end
     end
 end
